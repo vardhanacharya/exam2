@@ -1,0 +1,326 @@
+EXPERIMENT 4
+
+Build a Python Flask application and configure a fully automated CI/CD pipeline using Git/GitHub, Jenkins, and Docker. Use Jenkins cron jobs to trigger the pipeline automatically and deploy the application on Kubernetes.
+
+==================================================================
+CREATE FLASK APPLICATION
+==================================================================
+
+Create a project folder.
+
+mkdir flask-k8s-app
+
+cd flask-k8s-app
+
+Create app.py
+
+Paste the following code.
+
+from flask import Flask
+
+app = Flask(__name__)
+
+@app.route('/')
+def home():
+    return "Welcome to Flask CI/CD Pipeline on Kubernetes"
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000)
+
+Create requirements.txt
+
+Paste:
+
+Flask
+
+Install Flask.
+
+pip install -r requirements.txt
+
+Run the application.
+
+python app.py
+
+Open browser.
+
+http://localhost:5000
+
+==================================================================
+INITIALIZE GIT
+==================================================================
+
+git init
+
+git add .
+
+git commit -m "Initial Commit"
+
+Create a GitHub repository named:
+
+flask-k8s-app
+
+Connect GitHub repository.
+
+git remote add origin https://github.com/USERNAME/flask-k8s-app.git
+
+git branch -M main
+
+git push -u origin main
+
+==================================================================
+CREATE DOCKERFILE
+==================================================================
+
+Create a file named Dockerfile.
+
+Paste the following code.
+
+FROM python:3.11
+
+WORKDIR /app
+
+COPY requirements.txt .
+
+RUN pip install -r requirements.txt
+
+COPY . .
+
+EXPOSE 5000
+
+CMD ["python","app.py"]
+
+==================================================================
+BUILD DOCKER IMAGE
+==================================================================
+
+Build Docker image.
+
+docker build -t flask-k8s-app .
+
+Run Docker container.
+
+docker run -d -p 5000:5000 --name flask-container flask-k8s-app
+
+Open browser.
+
+http://localhost:5000
+
+(Optional)
+
+docker login
+
+docker tag flask-k8s-app USERNAME/flask-k8s-app
+
+docker push USERNAME/flask-k8s-app
+
+==================================================================
+CREATE KUBERNETES DEPLOYMENT FILE
+==================================================================
+
+Create a file named deployment.yaml
+
+Paste the following code.
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: flask-deployment
+
+spec:
+  replicas: 2
+
+  selector:
+    matchLabels:
+      app: flask-app
+
+  template:
+    metadata:
+      labels:
+        app: flask-app
+
+    spec:
+      containers:
+      - name: flask-container
+        image: flask-k8s-app
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 5000
+
+---
+
+apiVersion: v1
+kind: Service
+
+metadata:
+  name: flask-service
+
+spec:
+  selector:
+    app: flask-app
+
+  ports:
+  - port: 5000
+    targetPort: 5000
+
+  type: NodePort
+
+==================================================================
+CREATE JENKINS PIPELINE
+==================================================================
+
+Open Jenkins.
+
+http://localhost:8080
+
+Create New Item.
+
+Name:
+
+Flask-Kubernetes
+
+Select:
+
+Pipeline
+
+Click OK.
+
+Pipeline Definition:
+
+Pipeline script from SCM
+
+SCM:
+
+Git
+
+Repository URL:
+
+https://github.com/USERNAME/flask-k8s-app.git
+
+Branch:
+
+*/main
+
+Script Path:
+
+Jenkinsfile
+
+Enable Build periodically.
+
+Cron Expression:
+
+H/2 * * * *
+
+==================================================================
+CREATE JENKINSFILE
+==================================================================
+
+Create a file named Jenkinsfile.
+
+Paste the following code.
+
+pipeline {
+    agent any
+
+    triggers {
+        cron('H/2 * * * *')
+    }
+
+    stages {
+
+        stage('Clone Repository') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('Install Dependencies') {
+            steps {
+                sh 'pip install -r requirements.txt'
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                sh 'docker build -t flask-k8s-app .'
+            }
+        }
+
+        stage('Deploy to Kubernetes') {
+            steps {
+                sh 'kubectl apply -f deployment.yaml'
+            }
+        }
+    }
+}
+
+Save the Jenkinsfile.
+
+Push changes to GitHub.
+
+git add .
+
+git commit -m "Added Jenkins Pipeline"
+
+git push origin main
+
+==================================================================
+DEPLOY TO KUBERNETES
+==================================================================
+
+Start Minikube.
+
+minikube start
+
+Apply deployment.
+
+kubectl apply -f deployment.yaml
+
+Check deployments.
+
+kubectl get deployments
+
+Check pods.
+
+kubectl get pods
+
+Check services.
+
+kubectl get services
+
+Open the application.
+
+minikube service flask-service
+
+==================================================================
+PROJECT STRUCTURE
+==================================================================
+
+flask-k8s-app
+
+│
+
+├── app.py
+
+├── requirements.txt
+
+├── Dockerfile
+
+├── deployment.yaml
+
+├── Jenkinsfile
+
+==================================================================
+OUTPUT
+==================================================================
+
+from flask import Flask
+
+app = Flask(__name__)
+
+@app.route('/')
+def home():
+    return "Welcome to Flask CI/CD Pipeline on Kubernetes"
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000)
+The Python Flask application is successfully developed and integrated with GitHub, Jenkins, Docker, and Kubernetes. Jenkins automatically triggers the CI/CD pipeline using cron jobs, builds the Docker image, and deploys the application successfully on Kubernetes.
