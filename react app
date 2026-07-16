@@ -1,0 +1,259 @@
+EXPERIMENT 2
+
+Develop a React application and implement a fully automated CI/CD pipeline using Git/GitHub, Jenkins, and Docker. Configure Jenkins cron-based triggers to automatically initiate the pipeline. Containerize the application and deploy it on Docker Swarm.
+
+==================================================================
+CREATE REACT APPLICATION
+==================================================================
+
+Create a React project using Vite.
+
+npm create vite@latest react-cicd-app
+
+Select:
+Framework : React
+Variant : JavaScript
+
+Move into the project.
+
+cd react-cicd-app
+
+Install dependencies.
+
+npm install
+
+Run the application.
+
+npm run dev
+
+Open:
+http://localhost:5173
+
+Build the application.
+
+npm run build
+
+==================================================================
+INITIALIZE GIT
+==================================================================
+
+git init
+git add .
+git commit -m "Initial Commit"
+
+Create a repository named:
+
+react-cicd-app
+
+Connect GitHub repository.
+
+git remote add origin https://github.com/USERNAME/react-cicd-app.git
+git branch -M main
+git push -u origin main
+
+==================================================================
+CREATE DOCKERFILE
+==================================================================
+
+Create a file named Dockerfile and paste the following code.
+
+FROM node:20
+
+WORKDIR /app
+
+COPY package*.json ./
+
+RUN npm install
+
+COPY . .
+
+RUN npm run build
+
+RUN npm install -g serve
+
+EXPOSE 3000
+
+CMD ["serve","-s","dist","-l","3000"]
+
+==================================================================
+BUILD AND RUN DOCKER CONTAINER
+==================================================================
+
+Build Docker image.
+
+docker build -t react-cicd-app .
+
+Run Docker container.
+
+docker run -d -p 3000:3000 --name react-container react-cicd-app
+
+Open browser.
+
+http://localhost:3000
+
+(Optional)
+
+docker login
+
+docker tag react-cicd-app USERNAME/react-cicd-app
+
+docker push USERNAME/react-cicd-app
+
+==================================================================
+CREATE JENKINS PIPELINE
+==================================================================
+
+Open Jenkins.
+
+http://localhost:8080
+
+Create a New Item.
+
+Name:
+React-CICD
+
+Select:
+Pipeline
+
+Click OK.
+
+Under Pipeline section:
+
+Pipeline Definition:
+Pipeline script from SCM
+
+SCM:
+Git
+
+Repository URL:
+https://github.com/USERNAME/react-cicd-app.git
+
+Branch:
+*/main
+
+Script Path:
+Jenkinsfile
+
+Under Build Triggers enable:
+
+Build periodically
+
+Cron Expression:
+
+H/2 * * * *
+
+(This executes the pipeline every 2 minutes.)
+
+==================================================================
+CREATE JENKINSFILE
+==================================================================
+
+Create a file named Jenkinsfile in the project root and paste the following code.
+
+pipeline {
+    agent any
+
+    triggers {
+        cron('H/2 * * * *')
+    }
+
+    stages {
+
+        stage('Clone Repository') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('Install Dependencies') {
+            steps {
+                sh 'npm install'
+            }
+        }
+
+        stage('Build React Application') {
+            steps {
+                sh 'npm run build'
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                sh 'docker build -t react-cicd-app .'
+            }
+        }
+
+        stage('Deploy Docker Container') {
+            steps {
+                sh '''
+                docker rm -f react-container || true
+                docker run -d --name react-container -p 3000:3000 react-cicd-app
+                '''
+            }
+        }
+    }
+}
+
+Save the file and push it to GitHub.
+
+git add .
+git commit -m "Added Jenkins Pipeline"
+git push origin main
+
+==================================================================
+DEPLOY ON DOCKER SWARM
+==================================================================
+
+Initialize Docker Swarm.
+
+docker swarm init
+
+Deploy the application.
+
+docker service create \
+--name react-service \
+-p 3000:3000 \
+react-cicd-app
+
+Check running services.
+
+docker service ls
+
+Check service tasks.
+
+docker service ps react-service
+
+Open browser.
+
+http://localhost:3000
+
+==================================================================
+PROJECT STRUCTURE
+==================================================================
+
+react-cicd-app
+│
+├── src
+├── public
+├── package.json
+├── package-lock.json
+├── Dockerfile
+├── Jenkinsfile
+├── vite.config.js
+└── dist
+
+==================================================================
+OUTPUT
+==================================================================
+function App() {
+  return (
+    <div>
+      <h1>Welcome to React</h1>
+      <p>CI/CD Pipeline using GitHub, Jenkins, Docker and Docker Swarm</p>
+    </div>
+  );
+}
+
+export default App;
+
+The React application is successfully developed using Vite and integrated with GitHub, Jenkins, Docker, and Docker Swarm. Jenkins automatically triggers the CI/CD pipeline using a cron schedule, builds the React application, creates a Docker image, deploys the container, and the application runs successfully on Docker Swarm.
