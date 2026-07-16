@@ -1,0 +1,314 @@
+CI/CD PIPELINE FOR A MAVEN-BASED JAVA APPLICATION USING GIT/GITHUB, JENKINS, DOCKER AND DOCKER SWARM WITH CRON TRIGGER
+
+STEP 1: Create Maven Project
+
+• Open IntelliJ IDEA.
+• Create a Maven Project.
+• Project Name: java-swarm-app
+
+Build the project:
+
+mvn clean package
+
+Expected Output:
+
+BUILD SUCCESS
+
+A JAR file is generated inside:
+
+target/
+
+------------------------------------------------------------
+
+STEP 2: Create Dockerfile
+
+Create a file named Dockerfile.
+
+Paste:
+
+FROM eclipse-temurin:17-jdk
+
+WORKDIR /app
+
+COPY target/*.jar app.jar
+
+CMD ["java","-jar","app.jar"]
+
+------------------------------------------------------------
+
+STEP 3: Build Docker Image
+
+Execute:
+
+docker build -t java-swarm-app .
+
+Check image:
+
+docker images
+
+Run the container:
+
+docker run java-swarm-app
+
+------------------------------------------------------------
+
+STEP 4: Push Project to GitHub
+
+Initialize Git:
+
+git init
+
+Add files:
+
+git add .
+
+Commit:
+
+git commit -m "Initial Commit"
+
+Connect GitHub Repository:
+
+git remote add origin https://github.com/username/java-swarm-app.git
+
+Push:
+
+git push -u origin main
+
+------------------------------------------------------------
+
+STEP 5: Create Jenkins Pipeline
+
+Open Jenkins:
+
+http://localhost:8080
+
+Create New Item
+
+Select:
+
+Pipeline
+
+Configure:
+
+Pipeline script from SCM
+
+SCM:
+
+Git
+
+Repository URL:
+
+https://github.com/username/java-swarm-app.git
+
+Branch:
+
+main
+
+Script Path:
+
+Jenkinsfile
+
+------------------------------------------------------------
+
+STEP 6: Configure Cron Trigger
+
+Open the Jenkins Pipeline Job.
+
+Click Configure.
+
+Under Build Triggers, enable:
+
+Build periodically
+
+Enter the cron schedule:
+
+* * * * *
+
+(This runs the pipeline every minute for demonstration.)
+
+Click Save.
+
+------------------------------------------------------------
+
+STEP 7: Create Jenkinsfile
+
+Create a file named Jenkinsfile.
+
+Paste:
+
+pipeline {
+
+    agent any
+
+    stages {
+
+        stage('Clone') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('Build') {
+            steps {
+                sh 'mvn clean package'
+            }
+        }
+
+        stage('Docker Build') {
+            steps {
+                sh 'docker build -t java-swarm-app .'
+            }
+        }
+
+        stage('Deploy to Docker Swarm') {
+            steps {
+                sh 'docker service create --name java-service java-swarm-app || true'
+            }
+        }
+
+    }
+
+}
+
+Push the Jenkinsfile:
+
+git add .
+
+git commit -m "Added Jenkinsfile"
+
+git push
+
+------------------------------------------------------------
+
+STEP 8: Initialize Docker Swarm
+
+Execute:
+
+docker swarm init
+
+Verify:
+
+docker info
+
+Expected Output:
+
+Swarm: active
+
+------------------------------------------------------------
+
+STEP 9: Execute Jenkins Pipeline
+
+The pipeline starts automatically according to the cron schedule.
+
+Or click:
+
+Build Now
+
+Pipeline Stages:
+
+Stage 1:
+Clone Repository
+
+Stage 2:
+Build Maven Project
+
+Stage 3:
+Build Docker Image
+
+Stage 4:
+Deploy Docker Service
+
+Finished: SUCCESS
+
+------------------------------------------------------------
+
+STEP 10: Verify Deployment
+
+Check Swarm Services:
+
+docker service ls
+
+Check Running Containers:
+
+docker ps
+
+Check Service Logs:
+
+docker service logs java-service
+
+------------------------------------------------------------
+
+STEP 11: Remove Service
+
+docker service rm java-service
+
+------------------------------------------------------------
+
+PIPELINE STAGES
+
+1. Clone Source Code from GitHub
+2. Build Java Application using Maven
+3. Build Docker Image
+4. Deploy Container to Docker Swarm
+5. Verify Deployment
+
+------------------------------------------------------------
+
+IMPORTANT COMMANDS
+
+mvn clean package
+
+docker build -t java-swarm-app .
+
+docker run java-swarm-app
+
+git init
+
+git add .
+
+git commit -m "Initial Commit"
+
+git push -u origin main
+
+docker swarm init
+
+docker service create --name java-service java-swarm-app
+
+docker service ls
+
+docker service logs java-service
+
+docker service rm java-service
+
+------------------------------------------------------------
+
+EXPECTED OUTPUT
+
+Maven:
+BUILD SUCCESS
+
+Docker:
+Image Created Successfully
+
+Jenkins:
+Finished: SUCCESS
+
+Docker Swarm:
+Service Running
+
+------------------------------------------------------------
+
+CRON EXPRESSION USED
+
+* * * * *
+
+Meaning:
+Run the Jenkins pipeline every one minute.
+
+Other Examples:
+
+H/5 * * * *   → Every 5 minutes
+
+H * * * *     → Every hour
+
+0 9 * * *     → Every day at 9:00 AM
