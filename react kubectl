@@ -1,0 +1,320 @@
+EXPERIMENT 4
+
+Build a React application and configure a fully automated CI/CD pipeline using Git/GitHub, Jenkins, and Docker. Use Jenkins cron jobs to trigger the pipeline automatically and deploy the application on Kubernetes.
+
+==================================================================
+CREATE REACT APPLICATION
+==================================================================
+
+Create a React project using Vite.
+
+npm create vite@latest react-k8s-app
+
+Select:
+
+Framework : React
+Variant : JavaScript
+
+Move to the project folder.
+
+cd react-k8s-app
+
+Install dependencies.
+
+npm install
+
+Run the application.
+
+npm run dev
+
+Open browser.
+
+http://localhost:5173
+
+Build the application.
+
+npm run build
+
+==================================================================
+INITIALIZE GIT
+==================================================================
+
+git init
+
+git add .
+
+git commit -m "Initial Commit"
+
+Create a GitHub repository named:
+
+react-k8s-app
+
+Connect GitHub repository.
+
+git remote add origin https://github.com/USERNAME/react-k8s-app.git
+
+git branch -M main
+
+git push -u origin main
+
+==================================================================
+CREATE DOCKERFILE
+==================================================================
+
+Create a file named Dockerfile.
+
+Paste the following code.
+
+FROM node:20
+
+WORKDIR /app
+
+COPY package*.json ./
+
+RUN npm install
+
+COPY . .
+
+RUN npm run build
+
+RUN npm install -g serve
+
+EXPOSE 3000
+
+CMD ["serve","-s","dist","-l","3000"]
+
+==================================================================
+BUILD DOCKER IMAGE
+==================================================================
+
+docker build -t react-k8s-app .
+
+Run Docker container.
+
+docker run -d -p 3000:3000 --name react-container react-k8s-app
+
+Open browser.
+
+http://localhost:3000
+
+(Optional)
+
+docker login
+
+docker tag react-k8s-app USERNAME/react-k8s-app
+
+docker push USERNAME/react-k8s-app
+
+==================================================================
+CREATE KUBERNETES DEPLOYMENT FILE
+==================================================================
+
+Create a file named deployment.yaml
+
+Paste the following code.
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: react-deployment
+
+spec:
+  replicas: 2
+
+  selector:
+    matchLabels:
+      app: react-app
+
+  template:
+    metadata:
+      labels:
+        app: react-app
+
+    spec:
+      containers:
+      - name: react-container
+        image: react-k8s-app
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 3000
+
+---
+
+apiVersion: v1
+kind: Service
+
+metadata:
+  name: react-service
+
+spec:
+  selector:
+    app: react-app
+
+  ports:
+  - port: 3000
+    targetPort: 3000
+
+  type: NodePort
+
+==================================================================
+CREATE JENKINS PIPELINE
+==================================================================
+
+Open Jenkins.
+
+http://localhost:8080
+
+Create New Item.
+
+Name:
+
+React-Kubernetes
+
+Select:
+
+Pipeline
+
+Click OK.
+
+Pipeline Definition:
+
+Pipeline script from SCM
+
+SCM:
+
+Git
+
+Repository URL:
+
+https://github.com/USERNAME/react-k8s-app.git
+
+Branch:
+
+*/main
+
+Script Path:
+
+Jenkinsfile
+
+Enable Build periodically.
+
+Cron Expression:
+
+H/2 * * * *
+
+==================================================================
+CREATE JENKINSFILE
+==================================================================
+
+Create a file named Jenkinsfile.
+
+Paste the following code.
+
+pipeline {
+    agent any
+
+    triggers {
+        cron('H/2 * * * *')
+    }
+
+    stages {
+
+        stage('Clone Repository') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('Install Dependencies') {
+            steps {
+                sh 'npm install'
+            }
+        }
+
+        stage('Build React Application') {
+            steps {
+                sh 'npm run build'
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                sh 'docker build -t react-k8s-app .'
+            }
+        }
+
+        stage('Deploy to Kubernetes') {
+            steps {
+                sh 'kubectl apply -f deployment.yaml'
+            }
+        }
+    }
+}
+
+Save the Jenkinsfile.
+
+Push changes to GitHub.
+
+git add .
+
+git commit -m "Added Jenkins Pipeline"
+
+git push origin main
+
+==================================================================
+DEPLOY TO KUBERNETES
+==================================================================
+
+Start Minikube.
+
+minikube start
+
+Apply deployment.
+
+kubectl apply -f deployment.yaml
+
+Check deployments.
+
+kubectl get deployments
+
+Check pods.
+
+kubectl get pods
+
+Check services.
+
+kubectl get services
+
+Open the application.
+
+minikube service react-service
+
+==================================================================
+PROJECT STRUCTURE
+==================================================================
+
+react-k8s-app
+
+│
+
+├── src
+
+├── public
+
+├── package.json
+
+├── package-lock.json
+
+├── Dockerfile
+
+├── deployment.yaml
+
+├── Jenkinsfile
+
+└── vite.config.js
+
+==================================================================
+OUTPUT
+==================================================================
+
+The React application is successfully developed using Vite and integrated with GitHub, Jenkins, Docker, and Kubernetes. Jenkins automatically triggers the CI/CD pipeline using cron jobs, builds the React application, creates the Docker image, and deploys the application successfully on Kubernetes.
