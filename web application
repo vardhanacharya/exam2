@@ -1,0 +1,227 @@
+EXPERIMENT 2
+
+Develop a Web Application using HTML, CSS, and JavaScript and implement a fully automated CI/CD pipeline using Git/GitHub, Jenkins, and Docker. Configure Jenkins cron-based triggers to automatically initiate the pipeline. Containerize the application and deploy it on Docker Swarm.
+
+==================================================================
+CREATE WEB APPLICATION
+==================================================================
+
+Create a project folder.
+
+mkdir web-cicd-app
+
+cd web-cicd-app
+
+Create index.html
+
+Paste the following code.
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Web CI/CD Pipeline</title>
+</head>
+<body>
+    <h1>Welcome to Web Application</h1>
+    <p>CI/CD Pipeline using GitHub, Jenkins, Docker and Docker Swarm</p>
+</body>
+</html>
+
+==================================================================
+INITIALIZE GIT
+==================================================================
+
+git init
+git add .
+git commit -m "Initial Commit"
+
+Create a GitHub repository named:
+
+web-cicd-app
+
+Connect GitHub repository.
+
+git remote add origin https://github.com/USERNAME/web-cicd-app.git
+git branch -M main
+git push -u origin main
+
+==================================================================
+CREATE DOCKERFILE
+==================================================================
+
+Create a file named Dockerfile and paste the following code.
+
+FROM nginx:latest
+
+COPY . /usr/share/nginx/html
+
+EXPOSE 80
+
+==================================================================
+BUILD AND RUN DOCKER CONTAINER
+==================================================================
+
+Build Docker image.
+
+docker build -t web-cicd-app .
+
+Run Docker container.
+
+docker run -d -p 8080:80 --name web-container web-cicd-app
+
+Open browser.
+
+http://localhost:8080
+
+(Optional)
+
+docker login
+
+docker tag web-cicd-app USERNAME/web-cicd-app
+
+docker push USERNAME/web-cicd-app
+
+==================================================================
+CREATE JENKINS PIPELINE
+==================================================================
+
+Open Jenkins.
+
+http://localhost:8080
+
+Create New Item.
+
+Name:
+
+Web-CICD
+
+Select:
+
+Pipeline
+
+Click OK.
+
+Under Pipeline section:
+
+Definition:
+Pipeline script from SCM
+
+SCM:
+Git
+
+Repository URL:
+
+https://github.com/USERNAME/web-cicd-app.git
+
+Branch:
+
+*/main
+
+Script Path:
+
+Jenkinsfile
+
+Under Build Triggers enable:
+
+Build periodically
+
+Cron Expression:
+
+H/2 * * * *
+
+==================================================================
+CREATE JENKINSFILE
+==================================================================
+
+Create a file named Jenkinsfile and paste the following code.
+
+pipeline {
+    agent any
+
+    triggers {
+        cron('H/2 * * * *')
+    }
+
+    stages {
+
+        stage('Clone Repository') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                sh 'docker build -t web-cicd-app .'
+            }
+        }
+
+        stage('Deploy Docker Container') {
+            steps {
+                sh '''
+                docker rm -f web-container || true
+                docker run -d --name web-container -p 8080:80 web-cicd-app
+                '''
+            }
+        }
+    }
+}
+
+Save the file and push it to GitHub.
+
+git add .
+git commit -m "Added Jenkins Pipeline"
+git push origin main
+
+==================================================================
+DEPLOY ON DOCKER SWARM
+==================================================================
+
+Initialize Docker Swarm.
+
+docker swarm init
+
+Deploy the application.
+
+docker service create \
+--name web-service \
+-p 8080:80 \
+web-cicd-app
+
+Check running services.
+
+docker service ls
+
+Check service tasks.
+
+docker service ps web-service
+
+Open browser.
+
+http://localhost:8080
+
+==================================================================
+PROJECT STRUCTURE
+==================================================================
+
+web-cicd-app
+│
+├── index.html
+├── Dockerfile
+├── Jenkinsfile
+
+==================================================================
+OUTPUT
+==================================================================
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Web Application</title>
+</head>
+<body>
+    <h1>Welcome to Web Application</h1>
+    <p>CI/CD Pipeline using GitHub, Jenkins, Docker and Docker Swarm</p>
+</body>
+</html>
+
+The Web Application is successfully developed using HTML, CSS, and JavaScript and integrated with GitHub, Jenkins, Docker, and Docker Swarm. Jenkins automatically triggers the CI/CD pipeline using a cron schedule, builds the Docker image, deploys the container, and the web application runs successfully on Docker Swarm.
