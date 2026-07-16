@@ -1,0 +1,259 @@
+CI/CD PIPELINE USING MAVEN, GITHUB, JENKINS, DOCKER AND DOCKER SWARM
+
+STEP 1: Create a Maven Project
+
+• Open IntelliJ IDEA.
+• File → New → Project → Maven.
+• Project Name: java-cicd-app.
+• Click Finish.
+
+STEP 2: Build the Project
+
+Open Terminal and execute:
+
+mvn clean package
+
+Expected Output:
+
+BUILD SUCCESS
+
+A target folder is created containing:
+
+target/java-cicd-app-1.0.jar
+
+------------------------------------------------------------
+
+STEP 3: Create Dockerfile
+
+Create a file named Dockerfile.
+
+Paste:
+
+FROM eclipse-temurin:17-jdk
+
+WORKDIR /app
+
+COPY target/java-cicd-app-1.0.jar app.jar
+
+CMD ["java","-jar","app.jar"]
+
+Save the file.
+
+------------------------------------------------------------
+
+STEP 4: Build Docker Image
+
+Execute:
+
+docker build -t java-cicd .
+
+Check the image:
+
+docker images
+
+------------------------------------------------------------
+
+STEP 5: Run Docker Container
+
+Execute:
+
+docker run java-cicd
+
+Expected Output:
+
+CI/CD Pipeline Successful!
+
+------------------------------------------------------------
+
+STEP 6: Push Project to GitHub
+
+Initialize Git:
+
+git init
+
+Add files:
+
+git add .
+
+Commit:
+
+git commit -m "Initial Commit"
+
+Connect GitHub:
+
+git remote add origin https://github.com/username/java-cicd-app.git
+
+Push:
+
+git push -u origin main
+
+------------------------------------------------------------
+
+STEP 7: Create Jenkins Pipeline
+
+Open:
+
+http://localhost:8080
+
+• Click New Item.
+• Select Pipeline.
+• Give the project name.
+• Click OK.
+
+------------------------------------------------------------
+
+STEP 8: Configure Jenkins
+
+Pipeline → Pipeline script from SCM
+
+SCM → Git
+
+Repository URL:
+
+https://github.com/username/java-cicd-app.git
+
+Branch:
+
+main
+
+Script Path:
+
+Jenkinsfile
+
+Click Save.
+
+------------------------------------------------------------
+
+STEP 9: Create Jenkinsfile
+
+Create a file named Jenkinsfile.
+
+Paste:
+
+pipeline {
+
+    agent any
+
+    stages {
+
+        stage('Build') {
+            steps {
+                sh 'mvn clean package'
+            }
+        }
+
+        stage('Docker Build') {
+            steps {
+                sh 'docker build -t java-cicd .'
+            }
+        }
+
+        stage('Docker Run') {
+            steps {
+                sh 'docker run --rm java-cicd'
+            }
+        }
+
+    }
+
+}
+
+Push the Jenkinsfile:
+
+git add .
+
+git commit -m "Added Jenkinsfile"
+
+git push
+
+------------------------------------------------------------
+
+STEP 10: Execute Jenkins Pipeline
+
+Open Jenkins.
+
+Click:
+
+Build Now
+
+Console Output should display:
+
+BUILD SUCCESS
+
+Docker Build Successful
+
+Finished: SUCCESS
+
+------------------------------------------------------------
+
+STEP 11: Initialize Docker Swarm
+
+Execute:
+
+docker swarm init
+
+Verify:
+
+docker info
+
+Swarm should show:
+
+Swarm: active
+
+------------------------------------------------------------
+
+STEP 12: Deploy Application
+
+Execute:
+
+docker service create --name java-service java-cicd
+
+------------------------------------------------------------
+
+STEP 13: Verify Deployment
+
+Check Services:
+
+docker service ls
+
+Check Running Containers:
+
+docker ps
+
+Check Logs:
+
+docker service logs java-service
+
+------------------------------------------------------------
+
+STEP 14: Remove the Service
+
+docker service rm java-service
+
+------------------------------------------------------------
+
+COMMANDS TO REMEMBER
+
+mvn clean package
+
+docker build -t java-cicd .
+
+docker run java-cicd
+
+git init
+
+git add .
+
+git commit -m "Initial Commit"
+
+git push -u origin main
+
+docker swarm init
+
+docker service create --name java-service java-cicd
+
+docker service ls
+
+docker service logs java-service
+
+docker service rm java-service
