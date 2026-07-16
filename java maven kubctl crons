@@ -1,0 +1,351 @@
+CI/CD PIPELINE FOR A MAVEN-BASED JAVA APPLICATION USING GIT/GITHUB, JENKINS, DOCKER AND KUBERNETES WITH CRON TRIGGER
+
+STEP 1: Create Maven Project
+
+• Open IntelliJ IDEA.
+• Create a Maven Project.
+• Project Name: java-k8s-app
+
+Build the project:
+
+mvn clean package
+
+Expected Output:
+
+BUILD SUCCESS
+
+A JAR file is generated inside:
+
+target/
+
+------------------------------------------------------------
+
+STEP 2: Create Dockerfile
+
+Create a file named Dockerfile.
+
+Paste:
+
+FROM eclipse-temurin:17-jdk
+
+WORKDIR /app
+
+COPY target/*.jar app.jar
+
+CMD ["java","-jar","app.jar"]
+
+------------------------------------------------------------
+
+STEP 3: Build Docker Image
+
+Execute:
+
+docker build -t java-k8s-app .
+
+Check image:
+
+docker images
+
+Run the container:
+
+docker run java-k8s-app
+
+------------------------------------------------------------
+
+STEP 4: Push Project to GitHub
+
+Initialize Git:
+
+git init
+
+Add files:
+
+git add .
+
+Commit:
+
+git commit -m "Initial Commit"
+
+Connect GitHub Repository:
+
+git remote add origin https://github.com/username/java-k8s-app.git
+
+Push:
+
+git push -u origin main
+
+------------------------------------------------------------
+
+STEP 5: Create Jenkins Pipeline
+
+Open Jenkins:
+
+http://localhost:8080
+
+Create New Item
+
+Select:
+
+Pipeline
+
+Configure:
+
+Pipeline Script from SCM
+
+SCM:
+
+Git
+
+Repository URL:
+
+https://github.com/username/java-k8s-app.git
+
+Branch:
+
+main
+
+Script Path:
+
+Jenkinsfile
+
+------------------------------------------------------------
+
+STEP 6: Configure Jenkins Cron Trigger
+
+Open the Jenkins Pipeline Job.
+
+Click Configure.
+
+Under Build Triggers, enable:
+
+Build periodically
+
+Enter the cron expression:
+
+* * * * *
+
+(This executes the pipeline every minute.)
+
+Click Save.
+
+------------------------------------------------------------
+
+STEP 7: Create Jenkinsfile
+
+Create a file named Jenkinsfile.
+
+Paste:
+
+pipeline {
+
+    agent any
+
+    stages {
+
+        stage('Clone') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('Build') {
+            steps {
+                sh 'mvn clean package'
+            }
+        }
+
+        stage('Docker Build') {
+            steps {
+                sh 'docker build -t java-k8s-app .'
+            }
+        }
+
+        stage('Deploy to Kubernetes') {
+            steps {
+                sh 'kubectl apply -f deployment.yaml'
+            }
+        }
+
+    }
+
+}
+
+Push the Jenkinsfile:
+
+git add .
+
+git commit -m "Added Jenkinsfile"
+
+git push
+
+------------------------------------------------------------
+
+STEP 8: Create Kubernetes Deployment File
+
+Create deployment.yaml
+
+Paste:
+
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: java-app
+
+spec:
+  replicas: 1
+
+  selector:
+    matchLabels:
+      app: java-app
+
+  template:
+    metadata:
+      labels:
+        app: java-app
+
+    spec:
+      containers:
+      - name: java-app
+        image: java-k8s-app
+        imagePullPolicy: Never
+
+------------------------------------------------------------
+
+STEP 9: Start Kubernetes
+
+If using Docker Desktop:
+
+Enable Kubernetes.
+
+OR
+
+If using Minikube:
+
+minikube start
+
+Verify the cluster:
+
+kubectl get nodes
+
+------------------------------------------------------------
+
+STEP 10: Deploy Application
+
+Execute:
+
+kubectl apply -f deployment.yaml
+
+------------------------------------------------------------
+
+STEP 11: Verify Deployment
+
+Check Deployments:
+
+kubectl get deployments
+
+Check Pods:
+
+kubectl get pods
+
+Describe Deployment:
+
+kubectl describe deployment java-app
+
+------------------------------------------------------------
+
+STEP 12: Verify Jenkins Pipeline
+
+The pipeline starts automatically according to the cron schedule.
+
+Or click:
+
+Build Now
+
+Pipeline Stages:
+
+Stage 1:
+Clone Repository
+
+Stage 2:
+Build Maven Project
+
+Stage 3:
+Build Docker Image
+
+Stage 4:
+Deploy to Kubernetes
+
+Finished: SUCCESS
+
+------------------------------------------------------------
+
+STEP 13: Delete Deployment
+
+kubectl delete -f deployment.yaml
+
+------------------------------------------------------------
+
+PIPELINE STAGES
+
+1. Clone Source Code from GitHub
+2. Build Java Application using Maven
+3. Build Docker Image
+4. Deploy Docker Image to Kubernetes
+5. Verify Deployment
+
+------------------------------------------------------------
+
+IMPORTANT COMMANDS
+
+mvn clean package
+
+docker build -t java-k8s-app .
+
+docker run java-k8s-app
+
+git init
+
+git add .
+
+git commit -m "Initial Commit"
+
+git push -u origin main
+
+kubectl apply -f deployment.yaml
+
+kubectl get pods
+
+kubectl get deployments
+
+kubectl describe deployment java-app
+
+kubectl delete -f deployment.yaml
+
+------------------------------------------------------------
+
+CRON EXPRESSION
+
+* * * * *
+
+Meaning:
+Execute the Jenkins pipeline automatically every one minute.
+
+------------------------------------------------------------
+
+EXPECTED OUTPUT
+
+Maven:
+BUILD SUCCESS
+
+Docker:
+Image Created Successfully
+
+Jenkins:
+Finished: SUCCESS
+
+Kubernetes:
+Deployment Created Successfully
+
+Pod Status:
+Running
